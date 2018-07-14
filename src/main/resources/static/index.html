@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<title>Personnel Management</title>
+</head>
+<body>
+	<div class="container">
+		<div id='root' >
+			<span class="border"></span>
+		</div>
+		</br>
+		<div id='addform' ></div>
+
+	</div>
+	<script
+		src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+	<script src="https://fb.me/react-15.0.1.js"></script>
+	<script src="https://fb.me/react-dom-15.0.1.js"></script>
+	<script
+		src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+
+
+	<script type="text/babel">
+	var Employee = React.createClass({
+viewEmployee() {
+    var self = this;
+    $.ajax({
+      url:  "http://localhost:8080/employee/"+this.props.employee.empId,
+      type: 'GET',
+      success: function(result) {
+        self.setState({employee: result});
+      },
+      error: function(xhr, ajaxOptions, thrownError) {
+        toastr.error(xhr.responseJSON.message);
+      }
+    });
+  },
+  render: function() {
+    return (
+      <tr>
+ 		<a><td>{this.props.employee.empId}</td></a>
+        <td>{this.props.employee.name}</td>
+        <td>{this.props.employee.title}</td>
+		<td>{this.props.employee.email}</td>
+		<td>{this.props.employee.phone}</td>
+		<td>{this.props.employee.hireDate}</td>
+		<td>{this.props.employee.vacationDaysRemaining}</td>
+		
+
+       <td>
+    <button className="btn btn-info" onClick={this.viewEmployee}>View</button>
+</td>
+      </tr>);
+  }
+});
+var EmployeeTable = React.createClass({
+  render: function() {
+    var rows = [];
+    this.props.employees.forEach(function(employee) {
+      rows.push(<Employee employee={employee} />);
+    });
+    return (
+<div>
+<div><h1>Manager Report - Employees under Manager</h1></div> 
+      <table className="table .table-striped">
+        <thead className="thead-dark">
+          <tr>
+            <th>ID</th><th>Name</th><th>Title</th><th>Email</th><th>Phone</th><th>Hire Date</th><th>Vacation Balance</th>
+          </tr>
+        </thead>
+        <tbody>{rows}</tbody>
+      </table>
+</div>);
+  }
+});
+
+var App = React.createClass({
+ 
+  loadEmployeesFromServer: function () {
+    var self = this;
+    $.ajax({
+      url: "http://localhost:8080/manager/2/employee"
+    }).then(function (data) {
+      self.setState({employees : data});
+    });
+  },
+ 
+  getInitialState: function () {
+    return {employees : []};
+  },
+ 
+  componentDidMount: function () {
+    this.loadEmployeesFromServer();
+  },
+ render: function() {
+ 
+    return ( <EmployeeTable employees={this.state.employees}/> );
+  }
+});
+
+ class EmployeeDetails extends React.Component {
+      constructor(props) {
+        super(props);
+
+      }
+	handleChange (e) {
+    console.log('handle change called')
+  }
+      render() {
+        return (<div>
+			<div><h1>Add Employee</h1></div> 
+			<div className="form-group">
+
+             	<p>Name: <input className="form-control" type="text" onChange={(e) => {this.handleChange(e)}} /></p>
+               	<p>Email:  <input className="form-control" type="text" onChange={(e) => {this.handleChange(e)}} /></p>
+				<p>Address:  <input className="form-control" type="text" onChange={(e) => {this.handleChange(e)}}/></p>
+				<p>Phone:  <input className="form-control" type="text"  onChange={(e) => {this.handleChange(e)}}/></p>
+				<p>Title:  <input className="form-control" type="text" onChange={(e) => {this.handleChange(e)}} /></p>
+				<p>Hire Date:  <input className="form-control" type="date" onChange={(e) => {this.handleChange(e)}} /></p>
+				<p>Vacation Balance:  <input className="form-control" type="text" value='15' readOnly='readOnly'/></p>
+              
+			</div></div>
+        );
+      }
+    }
+class AddForm extends React.Component {
+   constructor(props) {
+            super(props);
+            this.state = {value: [], count: 1}; //initial you'll have one form
+this.handleSubmit = this.handleSubmit.bind(this);
+          }
+		handleChange (e) {
+    console.log('handle change called')
+  }
+          addMore(){
+            this.setState({count: this.state.count+1})//on click add more forms
+          }
+ 		handleSubmit(event){
+  			var self;
+
+		  event.preventDefault()
+ 			 self = this;
+
+  var employee = {
+    name: this.state.name,
+    email: this.state.email,
+    address: this.state.address,
+	hireDate: this.state.hireDate,
+	vacationDaysRemaining: this.state.vacationDaysRemaining
+  };
+alert(employee.name);
+  // Submit form via jQuery/AJAX
+  $.ajax({
+      url: "http://localhost:8080/employee",
+      dataType: 'json',
+      type: 'POST',
+      data: JSON.stringify(employee),
+	contentType: "application/json; charset=utf-8",
+      success: function(data) {
+        this.setState({data: data});
+      }.bind(this),
+      error: function(xhr, status, err) {
+        console.error(this.props.url, status, err.toString());
+      }.bind(this)
+    });
+  
+
+}
+          displayForm(){
+             let forms = [];
+             for(let i = 0; i < this.state.count; i++){
+                       forms.push(
+                       <div key={i}>
+                           <EmployeeDetails value={this.state.value[i] || ''} />
+                       </div>
+                    )
+             }
+             return forms || null;
+          }
+
+          render() {
+            return (
+              <form >
+                  {this.displayForm()}        
+                  <button className="btn" onClick={this.handleSubmit} type="submit">Submit</button>
+              </form>
+            );
+          }
+        }
+
+        ReactDOM.render(<AddForm />, document.getElementById('addform'));
+
+ReactDOM.render(<App />, document.getElementById('root') );
+	</script>
+
+</body>
+</html>
